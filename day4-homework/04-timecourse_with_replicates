@@ -1,0 +1,77 @@
+#!/usr/bin/env python
+
+"""
+- Plot timecourse for FBtr0331261
+
+04-timecourse_with_replicates <samples.csv> <directory> <replicates.csv> 
+"""
+import sys
+import os
+import matplotlib.pyplot as plt
+import pandas as pd
+
+transcript = 'FBtr0331261'
+
+df_samples = pd.read_csv( sys.argv[1] )
+
+labels = df_samples["stage"].values[:8]
+
+
+
+soi_f = df_samples['sex'] == 'female'
+soi_m = df_samples['sex'] == 'male'
+
+fpkms_f = []
+for sample in df_samples['sample'][soi_f]:
+    fname = os.path.join( sys.argv[2], sample, 't_data.ctab' )
+    df = pd.read_csv( fname, sep='\t')
+    roi = df['t_name'] == transcript
+    fpkms_f.append( df[roi]['FPKM'].values[0] )
+
+
+fpkms_m = []
+for sample in df_samples['sample'][soi_m]:
+    fname = os.path.join( sys.argv[2], sample, 't_data.ctab' )
+    df = pd.read_csv( fname, sep='\t')
+    roi = df['t_name'] == transcript
+    fpkms_m.append( df[roi]['FPKM'].values[0] )
+
+
+
+df_replicates = pd.read_csv (sys.argv[3] )
+
+rep_f = df_replicates['sex'] == 'female'
+
+rep_m = df_replicates['sex'] == 'male'
+
+
+fpkmsR_f = [None]*4
+for sample in df_replicates['sample'][rep_f]:
+    fname = os.path.join( sys.argv[2], sample, 't_data.ctab' )
+    df = pd.read_csv( fname, sep='\t')
+    roi = df['t_name'] == transcript
+    fpkmsR_f.append( df[roi]['FPKM'].values[0] )
+    
+fpkmsR_m = [None]*4
+for sample in df_replicates['sample'][rep_m]:
+    fname = os.path.join( sys.argv[2], sample, 't_data.ctab' )
+    df = pd.read_csv( fname, sep='\t')
+    roi = df['t_name'] == transcript
+    fpkmsR_m.append( df[roi]['FPKM'].values[0] )
+
+
+    
+    
+
+plt.figure()
+plt.plot(fpkms_f, label = "female", color = "r")
+plt.plot(fpkms_m, label = "male", color = "b")
+plt.plot(fpkmsR_f, 'o', color = "r")
+plt.plot(fpkmsR_m, 'o', color = "b")
+plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0,frameon=False)
+plt.xlabel("Developmental Stage")
+plt.xticks(range(len(labels)), labels )
+plt.title("Sxl", fontsize=20, style='italic')
+plt.ylabel("mRNA Abundance (FPKM)")
+plt.savefig('timecourse.png', bbox_inches = 'tight')
+plt.close()
